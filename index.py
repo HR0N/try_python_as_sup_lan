@@ -14,6 +14,7 @@ def parse():
         comps.append({
             'title':item.find('div', class_ = 'general-price-item__title').get_text(strip = True),
             'value':item.find('div', class_ = 'general-price-item__value').get_text(strip = True),
+            'value':item.find('div', class_ = 'general-price-item__value').get_text(strip = True),
         })
     for comp in comps:
         print(comp['title'], ' - ', comp['value'])
