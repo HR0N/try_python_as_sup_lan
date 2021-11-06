@@ -11,8 +11,6 @@ def parse():
     response = requests.get(URL, headers = HEADERS)
     soup = BeautifulSoup(response.content, 'html.parser')
     items = soup.find('div', class_ = 'table_wrp out yesterday')
-    print(items)
-    time.sleep(1)
     items = items.findAll('tr', class_ = 'tr')
     comps = []
     if(len(items) > 0):
