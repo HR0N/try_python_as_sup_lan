@@ -1,3 +1,4 @@
+import requests
 from selenium import webdriver
 import time
 import re
@@ -8,13 +9,19 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def main():
     reg = r'^.{1,20}$'
+    URL = "https://kbp.aero/en/"
     driver = webdriver.Chrome()
-    driver.get("https://kbp.aero/en/")
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+    }
+    response = requests.get(URL, headers=HEADERS)
+    driver.get(URL)
 
-    wait = WebDriverWait(driver, 10)
-    element = wait.until(EC.text_to_be_present_in_element((By.CLASS_NAME, 'td'), ''))
-
-    print(element)
+    wait = WebDriverWait(driver, 4)
+    element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'td')))
+    tds = driver.find_elements(By.CLASS_NAME, "td")
+    for td in tds:
+        print(td.text)
     # tds = element.find_elements(By.CLASS_NAME, "td")
     # for td in tds:
     #     print(td.text)
