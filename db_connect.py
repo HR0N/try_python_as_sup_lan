@@ -1,12 +1,11 @@
 # pip install mysql-connector-python
 
-import json
 from bs4 import BeautifulSoup
 import requests
 import mysql.connector
 from mysql.connector import Error
 
-items2 = ''
+
 def parse():
     URL = 'https://index.minfin.com.ua/markets/fuel/tm/'
     HEADERS = {
@@ -17,8 +16,7 @@ def parse():
     items = soup.find('table', class_='zebra')
     items = items.findAll('tr')
     items2 = str(items)
-    items2 = json.dumps(items2)
-    print(items2)
+    return items
 parse()
 
 
@@ -35,14 +33,58 @@ def create_connection(host_name, user_name, user_password, db_name):
     except Error as e:
         print(f"The error '{e}' occurred")
 
+    items3 = arr_sprint([], 'r1')
+    items4 = arr_sprint(items3, 'r0')
+
     cursor = connection.cursor()
 
     add_parse = ("INSERT INTO fuels ( parse ) VALUES ( %s)")
-    print(type(items2))
-    data_parse = ['items2']
-    # cursor.execute(add_parse, data_parse)
+    data_parse = [str(items4[0])]
+    print((data_parse))
+    cursor.execute(add_parse, data_parse)
 
     return connection
+
+def arr_sprint(arr, selector):
+    items2 = parse()
+
+    items3 = arr
+    for item in items2:
+        if(item.find('a').get_text(strip=True).find('+') < 0):
+            prices = item.findAll('td', class_=selector)
+
+            count: int = 0
+            arr: list = []
+            titles = ['title', 'br', '95+', '95', '92', 'df', 'gas']
+            for price in prices:
+                # if(count == 7):
+                #     count = 0
+                # if(count == 0):
+                #     title = 'title'
+                # if(count == 1):
+                #     title = 'br'
+                # if(count == 2):
+                #     title = '95+'
+                # if(count == 3):
+                #     title = '95'
+                # if(count == 4):
+                #     title = '92'
+                # if(count == 5):
+                #     title = 'df'
+                # if(count == 6):
+                #     title = 'gas'
+                title = titles[count]
+                count = count + 1
+                if(title == 'title'):
+                    arr.append({
+                        title: price.find('a').get_text(strip=True).replace('\xad', '').replace('\xa0', ' ')
+                    })
+                if (title != 'title'):
+                    arr[0][title] = price.get_text(strip=True)
+            items3.append(arr)
+
+    return items3
+
 
 
 
