@@ -15,7 +15,6 @@ def parse():
     soup = BeautifulSoup(response.content, 'html.parser')
     items = soup.find('table', class_='zebra')
     items = items.findAll('tr')
-    items2 = str(items)
     return items
 parse()
 
@@ -39,9 +38,9 @@ def create_connection(host_name, user_name, user_password, db_name):
     cursor = connection.cursor()
 
     add_parse = ("INSERT INTO fuels ( parse ) VALUES ( %s)")
-    data_parse = [str(items4[0])]
+    data_parse = [str(items4)]
     print((data_parse))
-    cursor.execute(add_parse, data_parse)
+    # cursor.execute(add_parse, data_parse)
 
     return connection
 
