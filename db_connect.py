@@ -37,10 +37,10 @@ def create_connection(host_name, user_name, user_password, db_name):
 
     cursor = connection.cursor()
 
-    add_parse = ("INSERT INTO fuels ( parse ) VALUES ( %s)")
+    add_parse = ("INSERT INTO fuels_2 ( parse ) VALUES ( %s)")
     data_parse = [str(items4)]
     print((data_parse))
-    # cursor.execute(add_parse, data_parse)
+    cursor.execute(add_parse, data_parse)
 
     return connection
 
