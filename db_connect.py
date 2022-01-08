@@ -1,4 +1,5 @@
 # pip install mysql-connector-python
+# -*- coding: utf-8 -*-
 
 from bs4 import BeautifulSoup
 import requests
@@ -37,7 +38,7 @@ def create_connection(host_name, user_name, user_password, db_name):
 
     cursor = connection.cursor()
 
-    add_parse = ("INSERT INTO fuels_2 ( parse ) VALUES ( %s)")
+    add_parse = ("INSERT INTO fuel ( json ) VALUES ( %s)")
     data_parse = [str(items4)]
     print((data_parse))
     cursor.execute(add_parse, data_parse)
@@ -54,31 +55,15 @@ def arr_sprint(arr, selector):
 
             count: int = 0
             arr: list = []
-            titles = ['title', 'br', '95+', '95', '92', 'df', 'gas']
+            titles = ["title", "br", "95+", "95", "92", "df", "gas"]
             for price in prices:
-                # if(count == 7):
-                #     count = 0
-                # if(count == 0):
-                #     title = 'title'
-                # if(count == 1):
-                #     title = 'br'
-                # if(count == 2):
-                #     title = '95+'
-                # if(count == 3):
-                #     title = '95'
-                # if(count == 4):
-                #     title = '92'
-                # if(count == 5):
-                #     title = 'df'
-                # if(count == 6):
-                #     title = 'gas'
                 title = titles[count]
                 count = count + 1
-                if(title == 'title'):
+                if(title == "title"):
                     arr.append({
                         title: price.find('a').get_text(strip=True).replace('\xad', '').replace('\xa0', ' ')
                     })
-                if (title != 'title'):
+                if (title != "title"):
                     arr[0][title] = price.get_text(strip=True)
             items3.append(arr)
 
@@ -87,4 +72,5 @@ def arr_sprint(arr, selector):
 
 
 
-connection = create_connection("pr435071.mysql.tools", "pr435071_fuelparse", "82aA!m9J#u", "pr435071_fuelparse")
+#connection = create_connection("pr435071.mysql.tools", "pr435071_fuelparse", "82aA!m9J#u", "pr435071_fuelparse")
+connection = create_connection("pr435071.mysql.tools", "pr435071_api", "s5+5+sYaF6", "pr435071_api")
