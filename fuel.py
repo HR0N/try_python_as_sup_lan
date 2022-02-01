@@ -28,6 +28,21 @@ def send_telegram(text: str):
         raise Exception("post_text error")
 
 
+# .................................................................:: Parse Data::...................................
+
+
+def parse_univ(url, elem1, elem2, elem1_class='', elem2_class=''):
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' +
+                      'Chrome/95.0.4638.69 Safari/537.36'
+    }
+    response = requests.get(url, headers=HEADERS)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    result = soup.find(elem1, class_=elem1_class)
+    result = result.findAll(elem2, class_=elem2_class)
+    return result
+
+
 # .................................................................:: Parse MinFin ::...................................
 
 
@@ -48,15 +63,15 @@ def parse_MinFin():
 
 
 def parse_KLO():
-    URL = 'https://index.minfin.com.ua/markets/fuel/tm/'
+    URL = 'https://www.klo.ua/'
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' +
                       'Chrome/95.0.4638.69 Safari/537.36'
     }
     response = requests.get(URL, headers=HEADERS)
     soup = BeautifulSoup(response.content, 'html.parser')
-    result = soup.find('table', class_='zebra')
-    result = result.findAll('tr')
+    result = soup.find('section', class_='general-price')
+    result = result.findAll('div', class_='general-price-item')
     return result
 
 
@@ -65,14 +80,14 @@ def parse_KLO():
 
 def fill_MinFin(selector):
     result: list = []
-    for item in items:
+    for item in min_fin:
         try:
             item.find('a').get_text(strip=True).find('+')
         except:
             send_telegram(
                 "<b>[ where ]: </b> today-taxi\n"
-                + "<b>[ section ]: </b> parsing fuel\n"
-                + "<b>[ error ]: </b> item.find('a').get_text(strip=True).find('+')"
+                + "<b>[ section ]: </b> parsing fuel - Fill MinFin\n"
+                + "<b>[ error ]: </b> <code>item.find('a').get_text(strip=True).find('+')</code>"
             )
 
         if item.find('a').get_text(strip=True).find('+') < 0:
@@ -99,10 +114,13 @@ def fill_MinFin(selector):
 # .................................................................:: INSERT INTO DB ::.................................
 
 
-items = parse_MinFin()
-items2 = fill_MinFin('r1')
-items3 = fill_MinFin('r0')
-item_res = items2 + items3
+# min_fin = parse_MinFin()
+# klo = parse_KLO()
+# parse_univ(url, elem1, elem2, elem1_class, elem2_class)
+min_fin = parse_univ('https://index.minfin.com.ua/markets/fuel/tm/', 'table', 'tr', 'zebra')
+min_fin2 = fill_MinFin('r1')
+min_fin3 = fill_MinFin('r0')
+item_res = min_fin2 + min_fin3
 
 
 # .................................................................:: Create Connection ::..............................
@@ -121,7 +139,7 @@ def create_connection(host_name, user_name, user_password, db_name):
     except Error as e:
         send_telegram(
             "<b>[ where ]: </b> today-taxi\n"
-            + "<b>[ section ]: </b> parsing fuel\n"
+            + "<b>[ section ]: </b> parsing fuel - Create Connection\n"
             + "<b>[ error ]: </b> ошибка связи с БД. >INSERT<"
         )
         print(f"The error '{e}' occurred")
@@ -130,14 +148,14 @@ def create_connection(host_name, user_name, user_password, db_name):
 
     add_parse = "UPDATE fuel SET json = ( %s) WHERE id = 1"
     data_parse = [str(item_res)]
-    print(data_parse)
     try:
-        cursor.execute(add_parse, data_parse)
+        print(data_parse)
+        # cursor.execute(add_parse, data_parse)
     except:
         send_telegram(
             "<b>[ where ]: </b> today-taxi\n"
-            + "<b>[ section ]: </b> parsing fuel\n"
-            + "<b>[ error ]: </b> cursor.execute(add_parse, data_parse)"
+            + "<b>[ section ]: </b> parsing fuel - Create Connection\n"
+            + "<b>[ error ]: </b> <code>cursor.execute(add_parse, data_parse)</code>"
         )
     return connect
 
@@ -147,6 +165,6 @@ if len(item_res) > 0:
 else:
     send_telegram(
         "<b>[ where ]: </b> today-taxi\n"
-        + "<b>[ section ]: </b> parsing fuel\n"
+        + "<b>[ section ]: </b> parsing fuel - Create Connection\n"
         + "<b>[ error ]: </b> вероятно, искомые элементы небыли найдены. Массив данных пуст!"
     )
