@@ -119,7 +119,6 @@ def fill_KLO():
     array: list = []
     # titles = ["title", "br", "95+", "95", "92", "df", "gas"]
     for item in klo:
-        print('item', item)
         try:
             item.find('div', class_='general-price-item__title').get_text(strip=True)
         except:
