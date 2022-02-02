@@ -101,14 +101,48 @@ def fill_MinFin(selector):
                 count = count + 1
                 if title == "title":
                     array.append({
-                        title: price.find('a').get_text(strip=True).replace('\xad', '').replace('\xa0', ' ')
+                        title: price.find('a').get_text(strip=True).replace('\xad', '').replace('\xa0', '')
                     })
                 if title != "title":
                     array[0][title] = price.get_text(strip=True)
-            if len(array) > 0:
+            if len(array) > 0 and array[0]['title'] != "KLO":
                 result.append(array[0])
+            if len(array) > 0 and array[0]['title'] == "KLO":
+                result.append(fill_KLO()[0])
 
-    return json.dumps(result)
+    return result
+
+# .................................................................:: Fill KLO ::....................................
+
+
+def fill_KLO():
+    array: list = []
+    # titles = ["title", "br", "95+", "95", "92", "df", "gas"]
+    for item in klo:
+        print('item', item)
+        try:
+            item.find('div', class_='general-price-item__title').get_text(strip=True)
+        except:
+            send_telegram(
+                "<b>[ where ]: </b> today-taxi\n"
+                + "<b>[ section ]: </b> parsing fuel - Fill KLO\n"
+                + "<b>[ error ]: </b> <code>item.find('a').get_text(strip=True).find('+')</code>"
+            )
+        title = item.find('div', class_='general-price-item__title').get_text(strip=True)
+        price = item.find('div', class_='general-price-item__value').get_text(strip=True).replace(' грн', '')
+        if title == "F 100":
+            array.append({"title": "KLO", "br": ""})
+        if title == "Euro 95":
+            array[0]["95+"] = price
+        if title == "95 Shebel":
+            array[0]["95"] = price
+        if title == "92 Shebel":
+            array[0]["92"] = price
+        if title == "Diesel Euro":
+            array[0]["df"] = price
+        if title == "Газ":
+            array[0]["gas"] = price
+    return array
 
 
 # .................................................................:: INSERT INTO DB ::.................................
@@ -118,9 +152,11 @@ def fill_MinFin(selector):
 # klo = parse_KLO()
 # parse_univ(url, elem1, elem2, elem1_class, elem2_class)
 min_fin = parse_univ('https://index.minfin.com.ua/markets/fuel/tm/', 'table', 'tr', 'zebra')
+klo = parse_univ('https://www.klo.ua/', 'section', 'div', 'general-price', 'general-price-item')
 min_fin2 = fill_MinFin('r1')
 min_fin3 = fill_MinFin('r0')
-item_res = min_fin2 + min_fin3
+min_fin4 = json.dumps(min_fin2 + min_fin3)
+item_res = min_fin4
 
 
 # .................................................................:: Create Connection ::..............................
@@ -147,10 +183,11 @@ def create_connection(host_name, user_name, user_password, db_name):
     cursor = connect.cursor()
 
     add_parse = "UPDATE fuel SET json = ( %s) WHERE id = 1"
+    # add_parse = ("INSERT INTO fuel ( json ) VALUES ( %s)")
     data_parse = [str(item_res)]
     try:
         print(data_parse)
-        # cursor.execute(add_parse, data_parse)
+        cursor.execute(add_parse, data_parse)
     except:
         send_telegram(
             "<b>[ where ]: </b> today-taxi\n"
