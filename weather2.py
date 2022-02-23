@@ -1,6 +1,7 @@
 # pip install mysql-connector-python
 # pip install mysql-connector-python
 import datetime
+import json
 from threading import Timer
 
 from bs4 import BeautifulSoup
@@ -90,7 +91,8 @@ def fill_data(url, day, month, year):
 
     # for r in result:
     #     print(r)
-    store_data({'day': day, 'month': month, 'year': year, 'data': result})
+    data = json.dumps({"day": day, "month": month, "year": year, "data": result})
+    store_data(data)
 
 
 # fill_data('https://sinoptik.ua/%D0%BF%D0%BE%D0%B3%D0%BE%D0%B4%D0%B0-%D0%BA%D0%B8%D0%B5%D0%B2/2022-02-23')
@@ -158,7 +160,7 @@ def create_connection(host_name, user_name, user_password, db_name):
 
     cursor = connection.cursor()
 
-    data_parse = [str(array)]
+    data_parse = [(str(array))]
     # add_parse = ("INSERT INTO weather2 ( json ) VALUES ( %s)")
     add_parse = ("UPDATE weather2 SET json = ( %s) WHERE id = 1")
     cursor.execute(add_parse, data_parse)
