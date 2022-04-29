@@ -80,6 +80,8 @@ def parse_KLO():
 
 def fill_MinFin(selector):
     result: list = []
+    if selector == "r1":
+        result.append(fill_KLO()[0])
     for item in min_fin:
         try:
             item.find('a').get_text(strip=True).find('+')
@@ -108,11 +110,13 @@ def fill_MinFin(selector):
             # if len(array) > 0 and array[0]['title'] != "KLO":
             #     result.append(array[0])
             if len(array) > 0 and array[0]['title'] == "KLO":
-                result.append(fill_KLO()[0])
+                # result.append(fill_KLO()[0])
+                print("KLO")
             elif len(array) > 0:
                 result.append(array[0])
 
     return result
+
 
 # .................................................................:: Fill KLO ::....................................
 
@@ -220,7 +224,7 @@ def create_connection(host_name, user_name, user_password, db_name):
     data_parse = [str(item_res)]
     try:
         print(data_parse)
-        # cursor.execute(add_parse, data_parse)
+        cursor.execute(add_parse, data_parse)
     except:
         send_telegram(
             "<b>[ where ]: </b> today-taxi\n"
