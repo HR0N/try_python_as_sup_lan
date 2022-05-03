@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
-
 driver = webdriver.Chrome("chromedriver.exe")
 import requests
 import mysql.connector
@@ -8,9 +7,11 @@ import time
 from mysql.connector import Error
 import random
 
+
 # todo:                                             ..:: variables ::..
 parse_interval = 120
 rand = random.randint(2, 5)
+all_data = []
 
 # todo:                                             ..:: code ::..
 
@@ -57,9 +58,8 @@ def kaban_linking():
 
 
 def kaban_parse(html_catch):
-    # data = {"number": "", "name": "", "price": "", "deadline": "", "tasks": "", "comment": "", "client": "",
-    #         "review": "", "positive": ""}
-    data: list = []
+    global all_data
+    kaban_data: list = []
     URL = 'https://kabanchik.ua/cabinet/dashboard/p/recommended'
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
@@ -70,17 +70,17 @@ def kaban_parse(html_catch):
     soup = BeautifulSoup(html)
 
     number = soup.find('span', class_='kb-task-details__task-id').get_text(strip=True)
-    data.append(number)
+    kaban_data.append(number)
 
     name = soup.find('h1', class_='kb-task-details__title').get_text(strip=True)
     name = name.split("№")[0]
-    data.append(name)
+    kaban_data.append(name)
 
     price = soup.find('span', class_='js-task-cost').get_text(strip=True)
-    data.append(price)
+    kaban_data.append(price)
 
     deadline = soup.find('span', class_='js-datetime_due').get_text(strip=True)
-    data.append(deadline)
+    kaban_data.append(deadline)
 
     tasks = soup.findAll('div', class_='kb-task-details__non-numeric-attribute')
     tasks_data: list = []
@@ -88,54 +88,75 @@ def kaban_parse(html_catch):
     for task in tasks:
         tasks_data.append(task.get_text(strip=True))
     sTasks = sTasks.join(tasks_data)
-    data.append(sTasks)
+    kaban_data.append(sTasks)
 
     comment = soup.find('div', attrs={'data-bazooka': 'LinkifyText'}).get_text(strip=True)
-    data.append(comment)
+    kaban_data.append(comment)
 
     client = soup.find('a', class_='kb-sidebar-profile__name').get_text(strip=True)
-    data.append(client)
+    kaban_data.append(client)
 
     review = soup.find('span', class_='kb-sidebar-profile__reviews-count').get_text(strip=True)
-    data.append(review)
+    kaban_data.append(review)
 
     positive = soup.find('div', class_='kb-sidebar-profile__rating').get_text(strip=True)
-    data.append(positive)
+    kaban_data.append(positive)
 
-    print(data)
-
-    connection = create_connection("pr435071.mysql.tools", "pr435071_parsehub", "y5f3VS*~2r", "pr435071_parsehub", data)
-
-    # items = soup.findAll('div', class_='kb-dashboard-performer__wrapper')
-    # items = soup.find('div', class_='kb-dashboard')
-    # items = items.findAll('div', class_='kb-dashboard-performer__wrapper')
+    if name not in all_data:
+        # insert_data(kaban_data)
+        # get_data()
+        print(kaban_data)
 
 
-def create_connection(host_name, user_name, user_password, db_name, data):
+def create_connection():
     connection = None
     try:
         connection = mysql.connector.connect(
-            host=host_name,
-            user=user_name,
-            passwd=user_password,
-            database=db_name
+            host="pr435071.mysql.tools",
+            user="pr435071_parsehub",
+            passwd="y5f3VS*~2r",
+            database="pr435071_parsehub"
         )
         print("Connection to MySQL DB successful")
     except Error as e:
         print(f"The error '{e}' occurred")
-
-    cursor = connection.cursor()
-    data_parse = data
-    add_parse = (
-        "INSERT INTO kabanchik2 ( number, name, price, deadline, tasks, comment, client, review, positive )"
-        "VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-    # add_parse = ("UPDATE weather SET json = ( %s) WHERE id = 1")
-    cursor.execute(add_parse, data_parse)
-
     return connection
 
 
-# connection = create_connection("pr435071.mysql.tools", "pr435071_parsehub", "y5f3VS*~2r", "pr435071_parsehub")
+def get_data():
+    global all_data
+    connection = create_connection()
+    cursor = connection.cursor()
+    sql_query = (
+        "SELECT * FROM `kabanchik2` WHERE 1")
+    cursor.execute(sql_query)
+    records = cursor.fetchall()
+    cursor.close()
+    all_data = records
+    return records
+
+
+def get_names():
+    connection = create_connection()
+    cursor = connection.cursor()
+    sql_query = (
+        "SELECT `name` FROM `kabanchik2` WHERE 1")
+    cursor.execute(sql_query)
+    records = cursor.fetchall()
+    cursor.close()
+    return records
+
+
+def insert_data(coming_data):
+    connection = create_connection()
+    cursor = connection.cursor()
+    sqlData = coming_data
+    sql = (
+        "INSERT INTO kabanchik2 ( number, name, price, deadline, tasks, comment, client, review, positive )"
+        "VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+    cursor.execute(sql, sqlData)
+    cursor.close()
+
 
 # todo:                                         .. :: Drive Me Baby :: ..
 
@@ -143,10 +164,10 @@ gmail_login()
 driver.implicitly_wait(3)
 
 kaban_login()
+get_data()
 driver.implicitly_wait(3)
 time.sleep(rand)
 
 kaban_linking()
 driver.implicitly_wait(3)
 time.sleep(rand)
-
