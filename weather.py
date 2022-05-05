@@ -19,9 +19,11 @@ def formulaFtoC(f):  # Formula °F to °C: (1 °F − 32) × 5/9
 
 
 def tenDays():
-    URL = 'https://weather.com/weather/tenday/l/d198c31dca17aa9ac8e4ff2e4dbdb48e4ca8c01f0fd1369998f0a09f53ef0b1d#detailIndex5'
+    URL = 'https://weather.com/weather/tenday/l/d198c31dca17aa9ac8e4ff2e4dbdb48e4ca8c01f0fd1369998f' \
+          '0a09f53ef0b1d#detailIndex5'
     HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/95.0.4638.69 Safari/537.36'
     }
     response = requests.get(URL, headers=HEADERS)
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -61,9 +63,11 @@ def tenDays():
 
 tenDays()
 def threeDays():
-    URL = 'https://weather.com/weather/hourbyhour/l/d198c31dca17aa9ac8e4ff2e4dbdb48e4ca8c01f0fd1369998f0a09f53ef0b1d'
+    URL = 'https://weather.com/weather/hourbyhour/l/d198c31dca17aa9ac8e4ff2e4dbdb48e4ca8c01f0fd1369998f0a' \
+          '09f53ef0b1d'
     HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/95.0.4638.69 Safari/537.36'
     }
     response = requests.get(URL, headers=HEADERS)
     soup = BeautifulSoup(response.content, 'html.parser')

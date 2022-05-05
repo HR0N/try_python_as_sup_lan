@@ -1,45 +1,53 @@
-from bs4 import BeautifulSoup
-from selenium import webdriver
-driver = webdriver.Chrome("chromedriver.exe")
-import requests
-import mysql.connector
-import time
 from mysql.connector import Error
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import mysql.connector
+import requests
 import random
-
+import time
 
 # todo:                                             ..:: variables ::..
+# driver = webdriver.Chrome("chromedriver.exe")
+options = webdriver.ChromeOptions()
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                     "Chrome/95.0.4638.69 Safari/537.36")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.headless = True
+driver = webdriver.Chrome(
+    executable_path="chromedriver.exe",
+    options=options
+)
 parse_interval = 120
 rand = random.randint(2, 5)
 all_data = []
 
 # todo:                                             ..:: code ::..
 
-options = webdriver.ChromeOptions()
-options.add_argument('--allow-profiles-outside-user-dir')
-options.add_argument('--enable-profile-shortcut-manager')
-options.add_argument(r'user-data-dir=.\User')
-options.add_argument('--profile-directory=Profile 1')
-
 
 def gmail_login():
     driver.get(
-        "https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https%3A%2F%2Fmail.google.com%2Fmail%2F&flowName=GlifWebSignIn&flowEntry=AccountChooser")
+        "https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https%3A%2F%2Fmail."
+        "google.com%2Fmail%2F&flowName=GlifWebSignIn&flowEntry=AccountChooser")
+    driver.implicitly_wait(rand)
     driver.find_element_by_name("identifier").send_keys("work.it.des")
     driver.find_element_by_xpath("//*[@id='identifierNext']/div/button/span").click()
     driver.implicitly_wait(5)
     driver.find_element_by_name("password").send_keys("qwerty0123456789gmail")
     driver.find_element_by_xpath("//*[@id='passwordNext']/div/button/span").click()
+    driver.implicitly_wait(rand)
 
 
 def kaban_login():
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
+    driver.implicitly_wait(rand)
     driver.find_element_by_xpath(
         "/html/body/div[2]/div[2]/div/div/div/div[1]/div/div/form/div[1]/div/div/div[1]/a").click()
     driver.implicitly_wait(5)
 
 
 def kaban_linking():
+    driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
+    time.sleep(1)
     links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
     driver.implicitly_wait(rand)
     for link in links:
@@ -62,7 +70,8 @@ def kaban_parse(html_catch):
     kaban_data: list = []
     URL = 'https://kabanchik.ua/cabinet/dashboard/p/recommended'
     HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/95.0.4638.69 Safari/537.36'
     }
     response = requests.get(URL, headers=HEADERS)
     # soup = BeautifulSoup(response.content, 'html.parser')
@@ -84,10 +93,13 @@ def kaban_parse(html_catch):
 
     tasks = soup.findAll('div', class_='kb-task-details__non-numeric-attribute')
     tasks_data: list = []
-    sTasks: str = ''
+    sTasks: str = '(^_^)'
     for task in tasks:
         tasks_data.append(task.get_text(strip=True))
     sTasks = sTasks.join(tasks_data)
+    sTasks = sTasks.replace('(^_^)', '\n')
+    if len(sTasks) < 5:
+        sTasks = 'Без ТЗ.'
     kaban_data.append(sTasks)
 
     comment = soup.find('div', attrs={'data-bazooka': 'LinkifyText'}).get_text(strip=True)
@@ -102,10 +114,22 @@ def kaban_parse(html_catch):
     positive = soup.find('div', class_='kb-sidebar-profile__rating').get_text(strip=True)
     kaban_data.append(positive)
 
-    if name not in all_data:
-        # insert_data(kaban_data)
-        # get_data()
-        print(kaban_data)
+    yes_in = False
+    for item in all_data:
+        if name in item:
+            yes_in = True
+            break
+    if not yes_in:
+        insert_data(kaban_data)
+        message = '<b>' + name + '</b>\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
+                  '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
+                  '\n' + review + ' - ' + positive + \
+                  '\n========================='
+        send_telegram(message)
+        time.sleep(.5)
+        get_data()
+        time.sleep(.5)
+    print(kaban_data)
 
 
 def create_connection():
@@ -158,10 +182,22 @@ def insert_data(coming_data):
     cursor.close()
 
 
+# todo:                                         .. :: Telegram :: ..
+def send_telegram(tmessage: str):
+    token = "5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4"
+    channel_id = "-692711290"
+    url2 = 'https://api.telegram.org/bot'+token+'/sendMessage?chat_id='+channel_id+'&parse_mode=' \
+                                                                                   'html&text='+tmessage
+    r = requests.post(url2)
+
+    if r.status_code != 200:
+        raise Exception("post_text error")
+
+
 # todo:                                         .. :: Drive Me Baby :: ..
 
 gmail_login()
-driver.implicitly_wait(3)
+time.sleep(15)
 
 kaban_login()
 get_data()
