@@ -94,10 +94,10 @@ def fill_MinFin(selector):
 
         if item.find('a').get_text(strip=True).find('+') < 0:
             prices = item.findAll('td', class_=selector)
-
             count: int = 0
             array: list = []
-            titles = ["title", "br", "95+", "95", "92", "df", "gas"]
+            # titles = ["title", "br", "95+", "95", "92", "df", "gas"]
+            titles = ["title", "br", "95", "92", "df", "gas"]
             for price in prices:
                 title = titles[count]
                 count = count + 1

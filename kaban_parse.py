@@ -7,16 +7,16 @@ import random
 import time
 
 # todo:                                             ..:: variables ::..
-# driver = webdriver.Chrome("chromedriver.exe")
-options = webdriver.ChromeOptions()
-options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                     "Chrome/95.0.4638.69 Safari/537.36")
-options.add_argument("--disable-blink-features=AutomationControlled")
-options.headless = True
-driver = webdriver.Chrome(
-    executable_path="chromedriver.exe",
-    options=options
-)
+driver = webdriver.Chrome("chromedriver.exe")
+# options = webdriver.ChromeOptions()
+# options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+#                      "Chrome/95.0.4638.69 Safari/537.36")
+# options.add_argument("--disable-blink-features=AutomationControlled")
+# options.headless = True
+# driver = webdriver.Chrome(
+#     executable_path="chromedriver.exe",
+#     options=options
+# )
 parse_interval = 120
 rand = random.randint(2, 5)
 all_data = []
@@ -197,7 +197,7 @@ def send_telegram(tmessage: str):
 # todo:                                         .. :: Drive Me Baby :: ..
 
 gmail_login()
-time.sleep(15)
+time.sleep(25)
 
 kaban_login()
 get_data()
