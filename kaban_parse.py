@@ -1,14 +1,25 @@
 from mysql.connector import Error
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import mysql.connector
 import requests
 import random
 import time
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+options = Options()
+options.add_argument("start-maximized")
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 # todo:                                             ..:: variables ::..
-driver = webdriver.Chrome("chromedriver.exe")
-# options = webdriver.ChromeOptions()
+# driver = webdriver.Chrome("chromedriver.exe")
+
+# option = webdriver.ChromeOptions()
+# browser = webdriver.Chrome(executable_path='chromedriver.exe',options=option)
+
 # options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
 #                      "Chrome/95.0.4638.69 Safari/537.36")
 # options.add_argument("--disable-blink-features=AutomationControlled")
@@ -21,6 +32,7 @@ parse_interval = 120
 rand = random.randint(2, 5)
 all_data = []
 
+
 # todo:                                             ..:: code ::..
 
 
@@ -29,43 +41,86 @@ def gmail_login():
         "https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https%3A%2F%2Fmail."
         "google.com%2Fmail%2F&flowName=GlifWebSignIn&flowEntry=AccountChooser")
     driver.implicitly_wait(rand)
-    driver.find_element_by_name("identifier").send_keys("work.it.des")
-    driver.find_element_by_xpath("//*[@id='identifierNext']/div/button/span").click()
+    driver.find_element(By.NAME, "identifier").send_keys("work.it.des")
+    driver.find_element(By.XPATH, "//*[@id='identifierNext']/div/button/span").click()
     driver.implicitly_wait(5)
-    driver.find_element_by_name("password").send_keys("qwerty0123456789gmail")
-    driver.find_element_by_xpath("//*[@id='passwordNext']/div/button/span").click()
+    driver.find_element(By.NAME, "password").send_keys("qwerty0123456789gmail")
+    driver.find_element(By.XPATH, "//*[@id='passwordNext']/div/button/span").click()
     driver.implicitly_wait(rand)
 
 
 def kaban_login():
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
     driver.implicitly_wait(rand)
-    driver.find_element_by_xpath(
-        "/html/body/div[2]/div[2]/div/div/div/div[1]/div/div/form/div[1]/div/div/div[1]/a").click()
+    driver.find_element(By.XPATH
+                        , "/html/body/div[2]/div[2]/div/div/div/div[1]/div/div/form/div[1]/div/div/div[1]/a").click()
     driver.implicitly_wait(5)
 
 
 def kaban_linking():
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
-    time.sleep(1)
-    links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
+    time.sleep(2)
+    # links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
     driver.implicitly_wait(rand)
+    check_kaban_links(driver.page_source)
+    # for link in links:
+    #     time.sleep(1)
+    #     link.click()
+    #     time.sleep(1)
+    #     cur_handlers = driver.window_handles
+    #     driver.switch_to.window(cur_handlers[1])
+    #     driver.implicitly_wait(2)
+    #     time.sleep(1)
+    #     kaban_parse(driver.page_source)
+    #     time.sleep(rand)
+    #     driver.close()
+    #     driver.implicitly_wait(rand)
+    #     driver.switch_to.window(cur_handlers[0])
+    #     time.sleep(1)
+
+
+def check_kaban_links(html_catch):
+    global all_data
+    kaban_data: list = []
+    URL = 'https://kabanchik.ua/cabinet/dashboard/p/recommended'
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/95.0.4638.69 Safari/537.36'
+    }
+    response = requests.get(URL, headers=HEADERS)
+    # soup = BeautifulSoup(response.content, 'html.parser')
+    # html = html_catch
+    # soup = BeautifulSoup(html)
+    # links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
+    links = driver.find_elements(By.CLASS_NAME, "kb-dashboard-performer__title")
+    # for lin in links:
+    #     print(lin.text)
+    # names = soup.findAll('a', class_='kb-dashboard-performer__title')
     for link in links:
-        link.click()
-        time.sleep(1)
-        cur_handlers = driver.window_handles
-        driver.switch_to.window(cur_handlers[1])
-        driver.implicitly_wait(2)
-        time.sleep(1)
-        kaban_parse(driver.page_source)
-        time.sleep(rand)
-        driver.close()
-        driver.implicitly_wait(rand)
-        driver.switch_to.window(cur_handlers[0])
-        time.sleep(1)
+        link_name = link.text
+        yes_in = False
+        for item in all_data:
+            if link_name in item:
+                yes_in = True
+                break
+        if not yes_in:
+            time.sleep(1)
+            link.click()
+            time.sleep(1)
+            cur_handlers = driver.window_handles
+            driver.switch_to.window(cur_handlers[1])
+            driver.implicitly_wait(2)
+            time.sleep(1)
+            url = driver.current_url
+            kaban_parse(driver.page_source, url)
+            time.sleep(rand)
+            driver.close()
+            driver.implicitly_wait(rand)
+            driver.switch_to.window(cur_handlers[0])
+            time.sleep(1)
 
 
-def kaban_parse(html_catch):
+def kaban_parse(html_catch, url):
     global all_data
     kaban_data: list = []
     URL = 'https://kabanchik.ua/cabinet/dashboard/p/recommended'
@@ -121,10 +176,12 @@ def kaban_parse(html_catch):
             break
     if not yes_in:
         insert_data(kaban_data)
-        message = '<b>' + name + '</b>\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
+        message = '\n============ New Order ============'\
+                  '<b>' + name + '</b>\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
                   '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
                   '\n' + review + ' - ' + positive + \
-                  '\n========================='
+                  '\n' + 'Url - ' + url + \
+                  '\n============ New Order ============'
         send_telegram(message)
         time.sleep(.5)
         get_data()
@@ -186,8 +243,8 @@ def insert_data(coming_data):
 def send_telegram(tmessage: str):
     token = "5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4"
     channel_id = "-692711290"
-    url2 = 'https://api.telegram.org/bot'+token+'/sendMessage?chat_id='+channel_id+'&parse_mode=' \
-                                                                                   'html&text='+tmessage
+    url2 = 'https://api.telegram.org/bot' + token + '/sendMessage?chat_id=' + channel_id + '&parse_mode=' \
+                                                                                           'html&text=' + tmessage
     r = requests.post(url2)
 
     if r.status_code != 200:
@@ -204,6 +261,17 @@ get_data()
 driver.implicitly_wait(3)
 time.sleep(rand)
 
-kaban_linking()
-driver.implicitly_wait(3)
-time.sleep(rand)
+i = 1
+while i < 2000:
+    time.sleep(1)
+    kaban_linking()
+    print(i, 'K.A.B.A.N. peris')
+    driver.implicitly_wait(3)
+    randStart = 110 + rand
+    time.sleep(randStart)
+    i += 1
+
+
+# Dependencies
+# pip3 install -U selenium
+# pip3 install webdriver-manager
