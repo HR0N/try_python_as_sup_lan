@@ -176,11 +176,10 @@ def kaban_parse(html_catch, url):
             break
     if not yes_in:
         insert_data(kaban_data)
-        message = '<b>' + name + '</b>\n\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
+        message = '\n<b>' + name + '</b>\n\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
                   '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
                   '\n' + review + ' - ' + positive + \
-                  '\n' + 'Url - ' + url + \
-                  '\n============ New Order ============'
+                  '\n' + 'Url - ' + url
         send_telegram(message)
         time.sleep(.5)
         get_data()
