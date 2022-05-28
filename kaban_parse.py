@@ -9,9 +9,23 @@ import time
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from fake_useragent import UserAgent
+ua = UserAgent()
 options = Options()
+options.add_argument(f'user-agent={ua.chrome}')
+# options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+#                      "Chrome/95.0.4638.69 Safari/537.36")
+options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("start-maximized")
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-extensions")
+options.add_argument("--disable-gpu")
+options.add_argument("--headless")
+# options.headless = True
+# service = Service(executable_path='/chromedriver.exe')
+# service = Service(ChromeDriverManager().install())            -----for new selenium versions
+# driver = webdriver.Chrome(service=service, options=options)   -----for new selenium versions
+driver = webdriver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 # todo:                                             ..:: variables ::..
@@ -37,6 +51,7 @@ all_data = []
 
 
 def gmail_login():
+    print("Gmail Authorization.")
     driver.get(
         "https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https%3A%2F%2Fmail."
         "google.com%2Fmail%2F&flowName=GlifWebSignIn&flowEntry=AccountChooser")
@@ -50,6 +65,7 @@ def gmail_login():
 
 
 def kaban_login():
+    print("Kaban4ik Authorization.")
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
     driver.implicitly_wait(rand)
     driver.find_element(By.XPATH
@@ -58,6 +74,7 @@ def kaban_login():
 
 
 def kaban_linking():
+    print("Find orders, sort then.")
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
     time.sleep(2)
     # links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
@@ -273,3 +290,10 @@ while i < 2000:
 # Dependencies
 # pip3 install -U selenium
 # pip3 install webdriver-manager
+# pip3 install fake-useragent
+
+
+# pip freeze - to check all versions
+# pip uninstall selenium
+# And:
+# pip install selenium==3.141.0
