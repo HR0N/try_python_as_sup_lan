@@ -20,7 +20,7 @@ options.add_argument("start-maximized")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-extensions")
 options.add_argument("--disable-gpu")
-options.add_argument("--headless")
+# options.add_argument("--headless")
 # options.headless = True
 # service = Service(executable_path='/chromedriver.exe')
 # service = Service(ChromeDriverManager().install())            -----for new selenium versions
@@ -196,7 +196,7 @@ def kaban_parse(html_catch, url):
     if not yes_in:
         insert_data(kaban_data)
         message = '\n<b>' + name + '</b>\n<b>'+was_created+'\n' + price + '</b> \n\nDeadline: ' + deadline + \
-                  '\n\n<b>ТЗ: </b>\n' \
+                  '\n\n<b>ТЗ: </b>\n' + \
                   '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
                   '\n' + review + ' - ' + positive + \
                   '\n' + 'Url - ' + url
