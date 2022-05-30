@@ -160,6 +160,8 @@ def kaban_parse(html_catch, url):
     price = soup.find('span', class_='js-task-cost').get_text(strip=True)
     kaban_data.append(price)
 
+    was_created = soup.find('div', class_='kb-sidebar-grid__content').get_text(strip=True)
+
     deadline = soup.find('span', class_='js-datetime_due').get_text(strip=True)
     kaban_data.append(deadline)
 
@@ -193,7 +195,8 @@ def kaban_parse(html_catch, url):
             break
     if not yes_in:
         insert_data(kaban_data)
-        message = '\n<b>' + name + '</b>\n\n<b>' + price + '</b> \n\nDeadline: ' + deadline + '\n\n<b>ТЗ: </b>\n' \
+        message = '\n<b>' + name + '</b>\n<b>'+was_created+'\n' + price + '</b> \n\nDeadline: ' + deadline + \
+                  '\n\n<b>ТЗ: </b>\n' \
                   '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
                   '\n' + review + ' - ' + positive + \
                   '\n' + 'Url - ' + url
