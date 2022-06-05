@@ -7,41 +7,25 @@ import requests
 import random
 import time
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
 ua = UserAgent()
 options = Options()
 options.add_argument(f'user-agent={ua.chrome}')
-# options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-#                      "Chrome/95.0.4638.69 Safari/537.36")
 options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("start-maximized")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-extensions")
 options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
 options.add_argument("--headless")
 # options.headless = True
-# service = Service(executable_path='/chromedriver.exe')
 # service = Service(ChromeDriverManager().install())            -----for new selenium versions
 # driver = webdriver.Chrome(service=service, options=options)   -----for new selenium versions
 driver = webdriver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 # todo:                                             ..:: variables ::..
-# driver = webdriver.Chrome("chromedriver.exe")
-
-# option = webdriver.ChromeOptions()
-# browser = webdriver.Chrome(executable_path='chromedriver.exe',options=option)
-
-# options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-#                      "Chrome/95.0.4638.69 Safari/537.36")
-# options.add_argument("--disable-blink-features=AutomationControlled")
-# options.headless = True
-# driver = webdriver.Chrome(
-#     executable_path="chromedriver.exe",
-#     options=options
-# )
 parse_interval = 120
 rand = random.randint(2, 5)
 all_data = []
@@ -62,6 +46,20 @@ def gmail_login():
     driver.find_element(By.NAME, "password").send_keys("qwerty0123456789gmail")
     driver.find_element(By.XPATH, "//*[@id='passwordNext']/div/button/span").click()
     driver.implicitly_wait(rand)
+    time.sleep(2)
+    driver.get_screenshot_as_file('./google.png')
+    print('screen')
+    time.sleep(3)
+    sVerify = "//*[@id='view_container']/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/ul/li[1]"
+    isSet = len(driver.find_elements(By.XPATH, sVerify)) > 0
+    if isSet:
+        print('Send verify SMS')
+        driver.find_element(By.XPATH, sVerify).click()
+        time.sleep(30)
+        verifyCode = 0
+        driver.find_element(By.NAME, "idvPin").send_keys(verifyCode)
+        time.sleep(3)
+    driver.implicitly_wait(rand)
 
 
 def kaban_login():
@@ -74,27 +72,11 @@ def kaban_login():
 
 
 def kaban_linking():
-    print("Find orders, sort then.")
+    print("Find orders.")
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
     time.sleep(2)
-    # links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
     driver.implicitly_wait(rand)
     check_kaban_links(driver.page_source)
-    # for link in links:
-    #     time.sleep(1)
-    #     link.click()
-    #     time.sleep(1)
-    #     cur_handlers = driver.window_handles
-    #     driver.switch_to.window(cur_handlers[1])
-    #     driver.implicitly_wait(2)
-    #     time.sleep(1)
-    #     kaban_parse(driver.page_source)
-    #     time.sleep(rand)
-    #     driver.close()
-    #     driver.implicitly_wait(rand)
-    #     driver.switch_to.window(cur_handlers[0])
-    #     time.sleep(1)
-
 
 def check_kaban_links(html_catch):
     global all_data
@@ -105,14 +87,7 @@ def check_kaban_links(html_catch):
                       'Chrome/95.0.4638.69 Safari/537.36'
     }
     response = requests.get(URL, headers=HEADERS)
-    # soup = BeautifulSoup(response.content, 'html.parser')
-    # html = html_catch
-    # soup = BeautifulSoup(html)
-    # links = driver.find_elements_by_class_name("kb-dashboard-performer__title")
     links = driver.find_elements(By.CLASS_NAME, "kb-dashboard-performer__title")
-    # for lin in links:
-    #     print(lin.text)
-    # names = soup.findAll('a', class_='kb-dashboard-performer__title')
     for link in links:
         link_name = link.text
         yes_in = False
@@ -125,6 +100,7 @@ def check_kaban_links(html_catch):
             link.click()
             time.sleep(1)
             cur_handlers = driver.window_handles
+            driver.implicitly_wait(rand)
             driver.switch_to.window(cur_handlers[1])
             driver.implicitly_wait(2)
             time.sleep(1)
@@ -272,7 +248,7 @@ def send_telegram(tmessage: str):
 # todo:                                         .. :: Drive Me Baby :: ..
 
 gmail_login()
-time.sleep(25)
+time.sleep(3)
 
 kaban_login()
 get_data()
@@ -294,7 +270,6 @@ while i < 2000:
 # pip3 install -U selenium
 # pip3 install webdriver-manager
 # pip3 install fake-useragent
-
 
 # pip freeze - to check all versions
 # pip uninstall selenium
