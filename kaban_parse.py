@@ -9,6 +9,11 @@ import time
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from fake_useragent import UserAgent
+import telebot
+
+
+# todo:                                         .. :: WebDriver :: ..
+
 ua = UserAgent()
 options = Options()
 options.add_argument(f'user-agent={ua.chrome}')
@@ -17,15 +22,29 @@ options.add_argument("start-maximized")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-extensions")
 options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
-options.add_argument("--headless")
+# options.add_argument("--no-sandbox")
+# options.add_argument("--headless")
+driver = webdriver
+
+
+def start_driver():
+    global driver
+    driver = webdriver
+    driver = driver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
+
+
+def stop_driver():
+    driver.close()
+
+# driver = webdriver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
 # options.headless = True
 # service = Service(ChromeDriverManager().install())            -----for new selenium versions
 # driver = webdriver.Chrome(service=service, options=options)   -----for new selenium versions
-driver = webdriver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 # todo:                                             ..:: variables ::..
+
+
 parse_interval = 120
 rand = random.randint(2, 5)
 all_data = []
@@ -77,6 +96,7 @@ def kaban_linking():
     time.sleep(2)
     driver.implicitly_wait(rand)
     check_kaban_links(driver.page_source)
+
 
 def check_kaban_links(html_catch):
     global all_data
@@ -247,29 +267,32 @@ def send_telegram(tmessage: str):
 
 # todo:                                         .. :: Drive Me Baby :: ..
 
-gmail_login()
-time.sleep(3)
 
-kaban_login()
-get_data()
-driver.implicitly_wait(3)
-time.sleep(rand)
+def show_time():
+    gmail_login()
+    time.sleep(3)
 
-i = 1
-while i < 2000:
-    time.sleep(1)
-    kaban_linking()
-    print(i, 'K.A.B.A.N. peris')
+    kaban_login()
+    get_data()
     driver.implicitly_wait(3)
-    randStart = 110 + rand
-    time.sleep(randStart)
-    i += 1
+    time.sleep(rand)
+
+    i = 1
+    while i < 2000:
+        time.sleep(1)
+        kaban_linking()
+        print(i, 'K.A.B.A.N. peris')
+        driver.implicitly_wait(3)
+        randStart = 110 + rand
+        time.sleep(randStart)
+        i += 1
 
 
 # Dependencies
 # pip3 install -U selenium
 # pip3 install webdriver-manager
 # pip3 install fake-useragent
+# pip3 install pip install pyTelegramBotAPI
 
 # pip freeze - to check all versions
 # pip uninstall selenium
