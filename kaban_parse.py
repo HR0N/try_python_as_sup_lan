@@ -71,11 +71,11 @@ def gmail_login():
     driver.find_element(By.NAME, "identifier").send_keys("work.it.des")
     driver.find_element(By.XPATH, "//*[@id='identifierNext']/div/button/span").click()
     driver.implicitly_wait(5)
-    driver.find_element(By.NAME, "password").send_keys("1qaz@WSX3edc$RFV")
+    driver.find_element(By.NAME, "password").send_keys("1234QWERasdfZXCV")
     driver.find_element(By.XPATH, "//*[@id='passwordNext']/div/button/span").click()
     driver.implicitly_wait(rand)
     time.sleep(2)
-    driver.get_screenshot_as_file('./sms.png')
+    driver.get_screenshot_as_file('./screen1.png')
     print('screen')
     time.sleep(3)
     sXpath = "//*[@id='view_container']/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/ul/li[1]/"
@@ -88,7 +88,7 @@ def gmail_login():
         bot.send_message(telegram_chat_id, msg)
         driver.find_element(By.XPATH, sXpath).click()
         time.sleep(45)
-        driver.get_screenshot_as_file('./smsCode.png')
+        driver.get_screenshot_as_file('./screen2.png')
         print('screen')
         verifyCode = read_code()
         driver.find_element(By.NAME, "idvPin").send_keys(verifyCode)
@@ -105,7 +105,7 @@ def kaban_login():
     driver.implicitly_wait(rand)
     driver.find_element(By.XPATH
                         , "/html/body/div[2]/div[2]/div/div/div/div[1]/div/div/form/div[1]/div/div/div[1]/a").click()
-    driver.get_screenshot_as_file('./kabanLogin.png')
+    driver.get_screenshot_as_file('./screen3.png')
     print('screen')
     driver.implicitly_wait(5)
 
