@@ -11,13 +11,17 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import NoSuchElementException
 from fake_useragent import UserAgent
 import telebot
+from telebot import types
 
 
 # todo:                                         .. :: WebDriver :: ..
 
-ua = UserAgent()
+# ua = UserAgent()
+ua = UserAgent(verify_ssl=False)
 options = Options()
 options.add_argument(f'user-agent={ua.chrome}')
+# options.add_argument(f'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+#                      f'Chrome/95.0.4638.69 Safari/537.36')
 options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("start-maximized")
 options.add_argument("--window-size=1920,1080")
@@ -27,15 +31,6 @@ options.add_argument("--no-sandbox")
 options.add_argument("--headless")
 driver = webdriver
 
-
-def start_driver():
-    global driver
-    driver = webdriver
-    driver = driver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
-
-
-def stop_driver():
-    driver.close()
 
 # driver = webdriver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
 # options.headless = True
@@ -48,15 +43,39 @@ def stop_driver():
 
 parse_interval = 120
 rand = random.randint(2, 5)
+rand_bot_answer = random.randint(0, 5)
 all_data = []
-telegram_chat_id = 441246772
 state = {
+    'currently_running': False,
     'write_sms': False,
+    'i': 0,
     'code': 0,
+    'last_master': ' - ',
+    'last_slayer': ' - ',
+    'telegram_chat_id': False,
+    'telegram_group_id': '-692711290',
+    'found_orders': 0,
+    'bot_angry_trigger': '0',
+    'bot_angry_count': 0,
+    'bot_angry_answers': ['Да завали ты уже хлебало!', "Господи, пусть он сдохнет, пожалуйста!",
+                          'Не можешь сосать молча, да?'],
 }
 
 
-bot = telebot.TeleBot("5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4", parse_mode=None)
+def start_driver():
+    global driver
+    driver = webdriver
+    driver = driver.Chrome(executable_path=(ChromeDriverManager().install()), options=options)
+    time.sleep(3)
+    show_time()
+
+
+def stop_driver():
+    state['currently_running'] = False
+    driver.close()
+
+
+bot = telebot.TeleBot("5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4", parse_mode='html')
 
 
 # todo:                                             ..:: code ::..
@@ -74,18 +93,18 @@ def gmail_login():
     driver.find_element(By.NAME, "password").send_keys("1234QWERasdfZXCV")
     driver.find_element(By.XPATH, "//*[@id='passwordNext']/div/button/span").click()
     driver.implicitly_wait(rand)
-    time.sleep(2)
+    time.sleep(4)
     driver.get_screenshot_as_file('./screen1.png')
     print('screen')
     time.sleep(3)
     sXpath = "//*[@id='view_container']/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/ul/li[1]/"
-    isSet = check_exists_by_xpath(sXpath)
-    # isSet = len(driver.find_elements(By.XPATH, sVerify)) > 0
+    isSet = False
+    # isSet = check_exists_by_xpath(sXpath)
     if isSet:
         print('Send verify SMS')
         state['write_sms'] = True
         msg = "Waiting for SMS..."
-        bot.send_message(telegram_chat_id, msg)
+        bot.send_message(state['telegram_chat_id'], msg)
         driver.find_element(By.XPATH, sXpath).click()
         time.sleep(45)
         driver.get_screenshot_as_file('./screen2.png')
@@ -101,6 +120,7 @@ def gmail_login():
 
 def kaban_login():
     print("Kaban4ik Authorization.")
+    driver.implicitly_wait(rand)
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
     driver.implicitly_wait(rand)
     driver.find_element(By.XPATH
@@ -164,10 +184,12 @@ def kaban_parse(html_catch, url):
     response = requests.get(URL, headers=HEADERS)
     # soup = BeautifulSoup(response.content, 'html.parser')
     html = html_catch
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="html5lib")
 
-    number = soup.find('span', class_='kb-task-details__task-id').get_text(strip=True)
-    kaban_data.append(number)
+    number = soup.find('span', class_='kb-task-details__task-id')
+    if number:
+        number = number.get_text(strip=True)
+        kaban_data.append(number)
 
     name = soup.find('h1', class_='kb-task-details__title').get_text(strip=True)
     name = name.split("№")[0]
@@ -211,12 +233,20 @@ def kaban_parse(html_catch, url):
             break
     if not yes_in:
         insert_data(kaban_data)
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("Открыть в браузере", url=url))
         message = '\n<b>' + name + '</b>\n<b>'+was_created+'\n' + price + '</b> \n\nDeadline: ' + deadline + \
                   '\n\n<b>ТЗ: </b>\n' + \
                   '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
                   '\n' + review + ' - ' + positive + \
                   '\n' + 'Url - ' + url
-        send_telegram(message)
+        msg = '\n<b>' + name + '</b>\n<b>'+was_created+'\n' + price + '</b> \n\nDeadline: ' + deadline + \
+              '\n\n<b>ТЗ: </b>\n' + \
+              '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
+              '\n' + review + ' - ' + positive
+        bot.send_message(state['telegram_group_id'], msg, reply_markup=markup)
+        state['found_orders'] = state['found_orders'] + 1
+        # send_telegram(message)
         time.sleep(.5)
         get_data()
         time.sleep(.5)
@@ -333,49 +363,98 @@ def show_time():
     time.sleep(3)
 
     kaban_login()
+    time.sleep(1)
     get_data()
     driver.implicitly_wait(3)
     time.sleep(rand)
 
-    i = 1
-    while i < 2000:
+    state['i'] = 0
+    while state['i'] < 2000:
         time.sleep(1)
         kaban_linking()
-        print(i, 'K.A.B.A.N. peris')
         driver.implicitly_wait(3)
         randStart = 110 + rand
+        state['i'] = state['i'] + 1
+        print(state['i'] + 1, 'KRAKEN pars')
         time.sleep(randStart)
-        i += 1
 
 
 # todo:                                         .. :: Telegram Bot :: ..
 
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
-    msg = f"{message.from_user.first_name} realise the KRAKEN"
-    bot.send_message(message.chat.id, msg)
-    start_driver()
-    time.sleep(3)
-    show_time()
+def botTelegramStart(message):
+    if not state['currently_running']:
+        state['currently_running'] = True
+        state['last_master'] = message.from_user.first_name
+        state['telegram_chat_id'] = message.chat.id
+        msg = f"{message.from_user.first_name} realise the KRAKEN"
+        bot.send_message(message.chat.id, msg)
+        start_driver()
+    elif state['currently_running']:
+        msg = "KRAKEN currently running..."
+        bot.send_message(state['telegram_chat_id'], msg)
 
 
 @bot.message_handler(commands=['stop'])
-def send_welcome(message):
+def botTelegramStop(message):
+    state['last_slayer'] = message.from_user.first_name
     msg = f"{message.from_user.first_name} calm down KRAKEN"
     bot.send_message(message.chat.id, msg)
     stop_driver()
 
 
 @bot.message_handler(commands=['enter_code'])
-def send_welcome(message):
+def botTelegramEnterCode(message):
     state['write_sms'] = True
     msg = "..."
     bot.send_message(message.chat.id, msg)
 
 
+@bot.message_handler(commands=['status'])
+def botTelegramStatus(message):
+    working = 'Да' if state['currently_running'] else 'Нет'
+    msg = f"Работает сейчас: <b>{working}</b>\n" \
+          f"Отработано циклов: <b>{state['i']}</b>\n" \
+          f"Найдено заказов: <b>{state['found_orders']}</b>\n" \
+          f"Последний запуск: <b>{state['last_master']}</b>\n" \
+          f"Последнее отключение: <b>{state['last_slayer']}</b>"
+    bot.send_message(message.chat.id, msg)
+
+
+@bot.message_handler(commands=['а'])
+def botTelegramStatus(message):
+    if rand > 2:
+        bot.send_message(message.chat.id, 'Ага...')
+    else:
+        bot.send_message(message.chat.id, 'Б!')
+
+
+@bot.message_handler(commands=['Думаешь?'])
+def botTelegramStatus(message):
+    if rand > 2:
+        bot.send_message(message.chat.id, 'Шикарно при том.')
+    else:
+        bot.send_message(message.chat.id, 'Регулярно, и тебе советую.')
+
+
 @bot.message_handler()
-def send_welcome(message):
+def botTelegramRandomMessage(message):
+    if state['bot_angry_trigger'] == message.text:
+        state['bot_angry_count'] = state['bot_angry_count'] + 1
+    else:
+        state['bot_angry_count'] = state['bot_angry_count'] - 1
+    state['bot_angry_trigger'] = message.text
+    bot_answers = [
+      'Я тебя не понимаю, кожаный мешок...', 'Что тебе надо?', 'Гуляй городами!',
+      f'А я видел как {message.from_user.first_name} игрался со своим писюном...', 'Что тебе надо додик?',
+      'Тебе видимо часто приходят потрясающие идеи! Только они никому не нарвятся...', 'Господи! Опять ты!..',
+      'Ты хоть осознаешь какая была бы польза обществу если бы батя вытер тебя об занавеску..?',
+      'Пробуешь собраться с мыслями?', 'Чтобы тебе всю жизнь заниматься пассивной некрофилией!',
+      'На кого шуршишь, пакетик?', 'У тебя родители случайно не физики? Выглядишь как неудавшийся эксперемент.',
+      'Фильтруй хрюканину!', 'Че ты булькаешь, жижа навозная', 'Здаров, псина сутулая!..', 'Привет самородок!',
+      'У меня от твоей улыбки жопа морщится!', 'А вы сударь сосите жопу!', 'Явилось лять, паганини!..',
+      'О, чамарок!..', 'Не говори вслух, у тебя понижается IQ.']
     if state['write_sms'] and len(message.text) == 6 and message.text.isdigit():
         msg = "Ok, lets free it..."
         code = message.text
@@ -388,12 +467,23 @@ def send_welcome(message):
         msg = "Or you have crooked hands. Or you decided to fucking joke. \nIn the code must by no one letters."
         return bot.send_message(message.chat.id, msg)
     else:
-        msg = "I don't understand you leather bag."
-        bot.send_message(message.chat.id, msg)
+        if state['bot_angry_count'] < 4:
+            if random.randint(1, 5) > 2:
+                msg = "I don't understand you, leather bag."
+            else:
+                msg = bot_answers[random.randint(0, (len(bot_answers) - 1))]
+            bot.send_message(message.chat.id, msg)
+        else:
+            if random.randint(1, 5) > 1:
+                msg = "..."
+            else:
+                msg = state['bot_angry_answers'][random.randint(0, (len(state['bot_angry_answers']) - 1))]
+            bot.send_message(message.chat.id, msg)
     state['write_sms'] = False
 
 
-bot.infinity_polling()
+# bot.infinity_polling()
+bot.polling()
 
 
 # Dependencies
@@ -406,3 +496,6 @@ bot.infinity_polling()
 # pip uninstall selenium
 # And:
 # pip install selenium==3.141.0
+
+# pip install bs4 fake-useragent mysql-connector-python html5lib pyTelegramBotAPI requests selenium webdriver-manager
+

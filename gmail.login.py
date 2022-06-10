@@ -1,6 +1,7 @@
 from selenium import webdriver
 driver = webdriver.Chrome("chromedriver.exe")
 
+
 def gmail_login():
     driver.get("https://accounts.google.com/AccountChooser/signinchooser?service=mail&continue=https%3A%2F%2Fmail.google.com%2Fmail%2F&flowName=GlifWebSignIn&flowEntry=AccountChooser")
     driver.find_element_by_name("identifier").send_keys("minecraftbastion2")
