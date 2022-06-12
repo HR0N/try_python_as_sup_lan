@@ -1,8 +1,8 @@
+import mysql.connector
 from mysql.connector import Error
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import mysql.connector
 import requests
 import random
 import time
@@ -12,6 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 from fake_useragent import UserAgent
 import telebot
 from telebot import types
+import re
 
 
 # todo:                                         .. :: WebDriver :: ..
@@ -58,7 +59,7 @@ state = {
     'bot_angry_trigger': '0',
     'bot_angry_count': 0,
     'bot_angry_answers': ['Да завали ты уже хлебало!', "Господи, пусть он сдохнет, пожалуйста!",
-                          'Не можешь сосать молча, да?'],
+                          'Матерь божья...', "А надеру-ка я тебе жопу!"],
 }
 
 
@@ -122,6 +123,7 @@ def kaban_login():
     print("Kaban4ik Authorization.")
     driver.implicitly_wait(rand)
     driver.get("https://kabanchik.ua/cabinet/dashboard/p/recommended")
+    time.sleep(4)
     driver.implicitly_wait(rand)
     driver.find_element(By.XPATH
                         , "/html/body/div[2]/div[2]/div/div/div/div[1]/div/div/form/div[1]/div/div/div[1]/a").click()
@@ -150,6 +152,7 @@ def check_kaban_links(html_catch):
     links = driver.find_elements(By.CLASS_NAME, "kb-dashboard-performer__title")
     for link in links:
         link_name = link.text
+        link_name = re.sub('[^\x00-\x7Fа-яА-Я]', '', link_name)
         yes_in = False
         for item in all_data:
             if link_name in item:
@@ -163,7 +166,7 @@ def check_kaban_links(html_catch):
             driver.implicitly_wait(rand)
             driver.switch_to.window(cur_handlers[1])
             driver.implicitly_wait(2)
-            time.sleep(1)
+            time.sleep(2)
             url = driver.current_url
             kaban_parse(driver.page_source, url)
             time.sleep(rand)
@@ -193,6 +196,7 @@ def kaban_parse(html_catch, url):
 
     name = soup.find('h1', class_='kb-task-details__title').get_text(strip=True)
     name = name.split("№")[0]
+    name = re.sub('[^\x00-\x7Fа-яА-Я]', '', name)
     kaban_data.append(name)
 
     price = soup.find('span', class_='js-task-cost').get_text(strip=True)
@@ -232,7 +236,7 @@ def kaban_parse(html_catch, url):
             yes_in = True
             break
     if not yes_in:
-        insert_data(kaban_data)
+        insert_data2(name)
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Открыть в браузере", url=url))
         message = '\n<b>' + name + '</b>\n<b>'+was_created+'\n' + price + '</b> \n\nDeadline: ' + deadline + \
@@ -273,7 +277,7 @@ def get_data():
     connection = create_connection()
     cursor = connection.cursor()
     sql_query = (
-        "SELECT * FROM `kabanchik2` WHERE 1")
+        "SELECT * FROM `kabanchik3` WHERE 1")
     cursor.execute(sql_query)
     records = cursor.fetchall()
     cursor.close()
@@ -285,7 +289,7 @@ def get_names():
     connection = create_connection()
     cursor = connection.cursor()
     sql_query = (
-        "SELECT `name` FROM `kabanchik2` WHERE 1")
+        "SELECT `order_id` FROM `kabanchik3` WHERE 1")
     cursor.execute(sql_query)
     records = cursor.fetchall()
     cursor.close()
@@ -296,7 +300,7 @@ def create_code(code):
     connection = create_connection()
     cursor = connection.cursor()
     sql_query = (
-        "INSERT INTO `bird_bot`(`code`) VALUES ("+code+")")
+        "INSERT INTO `bird_bot`(`code`) VALUES ('"+code+"')")
     cursor.execute(sql_query)
     cursor.close()
 
@@ -335,6 +339,15 @@ def insert_data(coming_data):
     cursor.close()
 
 
+def insert_data2(coming_data):
+    connection = create_connection()
+    cursor = connection.cursor()
+    sqlData = coming_data
+    sql = ("INSERT INTO `kabanchik3` (`order_id`) VALUES ('" + sqlData + "')")
+    cursor.execute(sql)
+    cursor.close()
+
+
 def check_exists_by_xpath(xpath):
     try:
         driver.find_element_by_xpath(xpath)
@@ -369,7 +382,7 @@ def show_time():
     time.sleep(rand)
 
     state['i'] = 0
-    while state['i'] < 2000:
+    while state['i'] < 5000:
         time.sleep(1)
         kaban_linking()
         driver.implicitly_wait(3)
@@ -443,7 +456,7 @@ def botTelegramRandomMessage(message):
     if state['bot_angry_trigger'] == message.text:
         state['bot_angry_count'] = state['bot_angry_count'] + 1
     else:
-        state['bot_angry_count'] = state['bot_angry_count'] - 1
+        state['bot_angry_count'] = 0
     state['bot_angry_trigger'] = message.text
     bot_answers = [
       'Я тебя не понимаю, кожаный мешок...', 'Что тебе надо?', 'Гуляй городами!',
@@ -454,7 +467,7 @@ def botTelegramRandomMessage(message):
       'На кого шуршишь, пакетик?', 'У тебя родители случайно не физики? Выглядишь как неудавшийся эксперемент.',
       'Фильтруй хрюканину!', 'Че ты булькаешь, жижа навозная', 'Здаров, псина сутулая!..', 'Привет самородок!',
       'У меня от твоей улыбки жопа морщится!', 'А вы сударь сосите жопу!', 'Явилось лять, паганини!..',
-      'О, чамарок!..', 'Не говори вслух, у тебя понижается IQ.']
+      'О, чамарок!..', 'Не говори вслух, у тебя понижается IQ.', f'{message.from_user.first_name}, угомонись уже.']
     if state['write_sms'] and len(message.text) == 6 and message.text.isdigit():
         msg = "Ok, lets free it..."
         code = message.text
@@ -469,7 +482,7 @@ def botTelegramRandomMessage(message):
     else:
         if state['bot_angry_count'] < 4:
             if random.randint(1, 5) > 2:
-                msg = "I don't understand you, leather bag."
+                msg = "I don't understand you..."
             else:
                 msg = bot_answers[random.randint(0, (len(bot_answers) - 1))]
             bot.send_message(message.chat.id, msg)
