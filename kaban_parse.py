@@ -1,3 +1,5 @@
+from functools import wraps
+
 import mysql.connector
 from mysql.connector import Error
 from selenium import webdriver
@@ -80,6 +82,22 @@ bot = telebot.TeleBot("5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4", parse_mo
 
 
 # todo:                                             ..:: code ::..
+
+
+def retry(times):
+    def wrapper_fn(f):
+        @wraps(f)
+        def new_wrapper(*args,**kwargs):
+            for i in range(times):
+                try:
+                    print('try %s' % (i + 1))
+                    return f(*args,**kwargs)
+                except Exception as e:
+                    time.sleep(1)
+                    error = e
+            raise error
+        return new_wrapper
+    return wrapper_fn
 
 
 def gmail_login():
@@ -248,7 +266,12 @@ def kaban_parse(html_catch, url):
               '\n\n<b>ТЗ: </b>\n' + \
               '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
               '\n' + review + ' - ' + positive
-        bot.send_message(state['telegram_group_id'], msg, reply_markup=markup)
+
+        @retry(5)
+        def send_message():
+            return bot.send_message(state['telegram_group_id'], msg, reply_markup=markup)
+
+        print(send_message())
         state['found_orders'] = state['found_orders'] + 1
         # send_telegram(message)
         time.sleep(.5)

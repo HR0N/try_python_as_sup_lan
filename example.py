@@ -1,6 +1,10 @@
+import time
+from functools import wraps
 import mysql.connector
 from mysql.connector import Error
 import re
+import telebot
+bot = telebot.TeleBot("5399648161:AAGO3-jdK6yEG9hJFy5_vhz5AvdDAfz4PN4", parse_mode='html')
 
 
 def create_connection():
@@ -30,15 +34,26 @@ def insert_data2(coming_data):
     cursor.close()
 
 
-list2 = []
-list3 = {'test': 'test2'}
-price = 'test'
-price2 = 'test2'
-list2.append(price)
-list2.append(price2)
+def retry(times):
+    def wrapper_fn(f):
+        @wraps(f)
+        def new_wrapper(*args,**kwargs):
+            for i in range(times):
+                try:
+                    print('try %s' % (i + 1))
+                    return f(*args,**kwargs)
+                except Exception as e:
+                    time.sleep(1)
+                    error = e
+            raise error
+        return new_wrapper
+    return wrapper_fn
 
-testStr = 'что за ххуйня 🥶'
-testStr = re.sub('[^\x00-\x7Fа-яА-Я]', '', testStr)
 
-insert_data2(testStr)
+@retry(5)
+def send_message():
+    return 1/0
+
+
+print(send_message())
 
