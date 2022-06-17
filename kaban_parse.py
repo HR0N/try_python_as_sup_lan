@@ -93,7 +93,7 @@ def retry(times):
                     print('try %s' % (i + 1))
                     return f(*args,**kwargs)
                 except Exception as e:
-                    time.sleep(1)
+                    time.sleep(7)
                     error = e
             raise error
         return new_wrapper
@@ -267,7 +267,7 @@ def kaban_parse(html_catch, url):
               '' + sTasks + '\n\n<b>Комментарий: </b> ' + comment + '\n\n<b>Клиент: </b> ' + client + ' ' \
               '\n' + review + ' - ' + positive
 
-        @retry(5)
+        @retry(10)
         def send_message():
             return bot.send_message(state['telegram_group_id'], msg, reply_markup=markup)
 
