@@ -519,8 +519,8 @@ def botTelegramRandomMessage(message):
 
 
 # bot.infinity_polling()
-bot.polling()
-
+# bot.polling()
+bot.infinity_polling(timeout=10, long_polling_timeout=5)
 
 # Dependencies
 # pip3 install -U selenium
