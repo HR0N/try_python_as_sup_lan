@@ -212,10 +212,12 @@ def kaban_parse(html_catch, url):
         number = number.get_text(strip=True)
         kaban_data.append(number)
 
-    name = soup.find('h1', class_='kb-task-details__title').get_text(strip=True)
-    name = name.split("№")[0]
-    name = re.sub('[^\x00-\x7Fа-яА-Я]', '', name)
-    kaban_data.append(name)
+    name = soup.find('h1', class_='kb-task-details__title')
+    if name:
+        name = name.get_text(strip=True)
+        name = name.split("№")[0]
+        name = re.sub('[^\x00-\x7Fа-яА-Я]', '', name)
+        kaban_data.append(name)
 
     price = soup.find('span', class_='js-task-cost').get_text(strip=True)
     kaban_data.append(price)
@@ -405,7 +407,7 @@ def show_time():
     time.sleep(rand)
 
     state['i'] = 0
-    while state['i'] < 5000:
+    while state['i'] < 264000:
         time.sleep(1)
         kaban_linking()
         driver.implicitly_wait(3)
