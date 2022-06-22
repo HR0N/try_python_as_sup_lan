@@ -536,4 +536,5 @@ bot.infinity_polling(timeout=10, long_polling_timeout=5)
 # pip install selenium==3.141.0
 
 # pip install bs4 fake-useragent mysql-connector-python html5lib pyTelegramBotAPI requests selenium webdriver-manager
+# source bin/activate
 
